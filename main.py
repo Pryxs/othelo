@@ -5,7 +5,7 @@ from tkinter import *
 
 def initVariable():
     global player 
-    player = 1 
+    player = "black"
     createBoard()
     
 
@@ -86,7 +86,7 @@ def initColor(keyX, k):
 
 
 # création du plateau de jeu à l'aide de notre tableau
-def createCanvas():
+def createWindow():
     #création d'une fenetre
     window = Tk()
     #screenHeight = window.winfo_screenheight()
@@ -95,6 +95,7 @@ def createCanvas():
     window.resizable(width=False, height=False) #emepche resize de la fenetre
 
     #création d'un canvas ans la fenetre
+    global can
     can = Canvas(window, width=400, height=400, bg='black')
     can.pack()
 
@@ -120,7 +121,15 @@ def displayGrid(can):
             k += 1
 
 
-### JEU ###
+### JEU ###    
+
+def switchPlayer():
+    global player
+    if(player == "black"):
+        player = "white"
+    else:
+        player = "black"
+
 
 # renvoie la case en fonction des coordonnées 
 def searchIndex(x, y):
@@ -138,13 +147,87 @@ def searchIndex(x, y):
 # renvoie la couleur de la case demandé
 def searchColor(abs, ordo):
         color = board[abs][ordo]["value"]
-        print(color)
+        return color
 
 
+def checkMove(square):
+    valid = FALSE
+
+    # vérifie si case pointé est libre
+    if(board[square[0]][square[1]]["value"] == "green"):
+        #DROITE
+        #ne vérifie pas si case collé au bord droit
+        if(ord(square[0]) < ord("H")):
+            # couleur de la case de droite
+            right = searchColor(chr(ord(square[0]) + 1), square[1]) 
+
+            # si case de droite est un pion ennemi
+            if(right != player and right != "green"):
+                nx = chr(ord(square[0]) + 1)
+
+                # cherche une case allié a droite
+                while(searchColor(nx, square[1]) != player and right != "green" and ord(nx) < ord("H")):
+                    nx = chr(ord(nx) + 1)
+
+                    # repère si la case est allié
+                    if searchColor(nx, square[1]) == player:
+                        nnx = chr(ord(square[0]))
+                        valid = TRUE
+
+                        while searchColor(nnx, square[1]) != player and right != "green":
+                            board[nnx][square[1]]["value"] = player
+                            nnx = chr(ord(nnx) + 1)
+            
+        #GAUCHE
+        if(ord(square[0]) > ord("A")):
+            left = searchColor(chr(ord(square[0]) - 1), square[1]) 
+            if(left != player and left != "green"):
+                nx = chr(ord(square[0]) - 1)
+                while(searchColor(nx, square[1]) != player and left != "green" and ord(nx) > ord("A")):
+                    nx = chr(ord(nx) - 1)
+                    if searchColor(nx, square[1]) == player:
+                        nnx = chr(ord(square[0]))
+                        valid = TRUE
+                        while searchColor(nnx, square[1]) != player and left != "green":
+                            board[nnx][square[1]]["value"] = player
+                            nnx = chr(ord(nnx) - 1)
+
+        #HAUT
+        if(square[1] > 1):
+            top = searchColor(square[0], square[1] - 1) 
+            if(top != player and top != "green"):
+                ny = square[1] - 1
+                while(searchColor(square[0], ny) != player and top != "green" and ny > 1):
+                    ny -= 1
+                    if searchColor(square[0], ny) == player:
+                        nny = square[1] 
+                        valid = TRUE
+                        while searchColor(square[0], nny) != player and top != "green":
+                            board[square[0]][nny]["value"] = player
+                            nny -= 1
+
+        #BAS
+        if(square[1] < 8):
+            bot = searchColor(square[0], square[1] + 1) 
+            if(bot != player and bot != "green"):
+                ny = square[1] + 1
+                while(searchColor(square[0], ny) != player and bot != "green" and ny < 8):
+                    ny += 1
+                    if searchColor(square[0], ny) == player:
+                        nny = square[1]
+                        valid = TRUE
+                        while searchColor(square[0], nny) != player and bot != "green":
+                            board[square[0]][nny]["value"] = player
+                            nny += 1
+        if(valid):
+            switchPlayer()
+            displayGrid(can)
+
+    
 # event tkinter qui récupère le click de la souris dans la fenêtre
 def onClick(event):
     square = searchIndex(event.x, event.y)
-    checkMove()
+    checkMove(square)
     searchColor(square[0], square[1])
 
 
@@ -152,23 +235,10 @@ def onClick(event):
 
 def othello():
     initVariable()
-    createCanvas()
+    createWindow()
 
 othello()
-# initBoard()
-# board = {"A" : 
-#     {"1" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 0, "y1" : 49}, "val" : "vert"}, 
-#     "2" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "3" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "4" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "5" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "6" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "7" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},
-#     "8" : {"coord" : {"x0" : 0, "x1" : 50, "y0" : 50, "y1" : 99}, "val" : "vert"},  
-#     },
-    
-#     "B" : ["1", "2"]}
-# print(board["A"]["1"]["coord"])
+
 
 
 
