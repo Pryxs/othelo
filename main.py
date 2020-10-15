@@ -1,12 +1,15 @@
 from tkinter import *
 
 
+### INITIALISATION ###
+
 def initVariable():
     global player 
     player = 1 
     createBoard()
     
 
+# création d'un dictionnaire réprésentant le plateau de jeu
 def createBoard():
     global board
     board = {}
@@ -20,11 +23,11 @@ def createBoard():
         while k <= 8:
             board[keyX][k] = {}
             board[keyX][k]["coord"] = createCoord(keyX, k)
-            board[keyX][k]["value"] = "green"
+            board[keyX][k]["value"] = initColor(keyX, k)
             k += 1
 
 
-
+# affecte les bonnes coordonnées (abscisse : x) dans le dictionnaire
 def createCoord(keyX, k):
     if(keyX == "A"):
         ordo = createOrdo(k)
@@ -52,6 +55,7 @@ def createCoord(keyX, k):
         return {"x0" : 350, "x1" : 400, "y0" : ordo["y0"], "y1" : ordo["y1"]}
 
 
+# affecte les bonnes coordonnées (ordonné : y) dans le dictionnaire
 def createOrdo(k):
     if(k == 1):
         return {"y0" : 0, "y1" : 50}
@@ -71,25 +75,38 @@ def createOrdo(k):
         return {"y0" : 350, "y1" : 400}
 
 
+# initialise les 4 pions au milieu du plateau 
+def initColor(keyX, k):
+    if(keyX == "D" and k == 4 or keyX == "E" and k == 5):
+        return "white"
+    elif(keyX == "D" and k == 5 or keyX == "E" and k == 4):
+        return "black"   
+    else:
+        return "green"
+
+
+# création du plateau de jeu à l'aide de notre tableau
 def createCanvas():
     #création d'une fenetre
     window = Tk()
-    screenHeight = window.winfo_screenheight()
+    #screenHeight = window.winfo_screenheight()
     window.title("Othello")
     window.update_idletasks()
     window.resizable(width=False, height=False) #emepche resize de la fenetre
 
     #création d'un canvas ans la fenetre
-    can = Canvas(window, width=screenHeight - 100, height=screenHeight - 100, bg='ivory')
+    can = Canvas(window, width=400, height=400, bg='black')
     can.pack()
 
     displayGrid(can)
 
+    window.bind("<Button-1>", onClick)
     window.mainloop()
 
 
+# création des cases du plateau 
 def displayGrid(can):
-    for value in board.items():
+    for key, value in board.items():
         k = 1
         while k <= 8:
             coord = value[k]["coord"]
@@ -103,14 +120,39 @@ def displayGrid(can):
             k += 1
 
 
-def draw():
-    createCanvas()
+### JEU ###
 
+# renvoie la case en fonction des coordonnées 
+def searchIndex(x, y):
+    for key, value in board.items():
+        k = 1
+        while k <= 8:
+            coord = value[k]["coord"]
+            if(coord["x0"] <= x <= coord["x1"] and coord["y0"] <= y <= coord["y1"]):
+                return(key , k)
+
+
+            k += 1
+
+
+# renvoie la couleur de la case demandé
+def searchColor(abs, ordo):
+        color = board[abs][ordo]["value"]
+        print(color)
+
+
+# event tkinter qui récupère le click de la souris dans la fenêtre
+def onClick(event):
+    square = searchIndex(event.x, event.y)
+    checkMove()
+    searchColor(square[0], square[1])
+
+
+### LANCEMENT ###
 
 def othello():
     initVariable()
-    draw()
-
+    createCanvas()
 
 othello()
 # initBoard()
