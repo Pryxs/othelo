@@ -1,10 +1,16 @@
 from tkinter import *
+from random import *
+from tkinter import messagebox
+
+
 
 
 ### INITIALISATION ###
 
 def initVariable():
     global player 
+    global score
+    score = {"white" : 2, "black" : 2}
     player = "black"
     createBoard()
     
@@ -105,6 +111,7 @@ def createWindow():
     window.mainloop()
 
 
+
 # création des cases du plateau 
 def displayGrid(can):
     for key, value in board.items():
@@ -150,19 +157,240 @@ def searchColor(abs, ordo):
         return color
 
 
-def checkMove(square):
+# vérifie quand le jeu prend fin
+def checkEnd():
+    global score
+    w = 0
+    b = 0
+    for key, value in board.items():
+        k = 1
+        while k <= 8:
+            val = value[k]["value"]
+            if(val == "white"):
+                w += 1
+            elif(val == "black"):
+                b += 1
+
+            
+            k += 1
+
+
+    if(w + b == 64):
+        if(w == b):
+            message = "égalité !"
+        elif(w > b):
+            message = "blanc gagne avec", w ,"points contre" , b
+        else:
+            message = "noir gagne avec", b ,"points contre" , w
+
+
+        messagebox.showinfo("Fin du jeu", message)
+        initVariable()
+        displayGrid(can)
+
+
+
+# regarde les coups possible
+def checkPlayable():
+    playable = FALSE
+    shot = {}
+    for key, value in board.items():
+        k = 1
+        while k <= 8:
+            if(value[k]["value"] == "green"):
+
+                ### COUP DROIT ###
+
+                #DROITE
+                if key != 'H': 
+                    right = searchColor(chr(ord(key) + 1), k) 
+
+                    # si case de droite est un pion ennemi
+                    if(right != player and right != "green"):
+                        nx = chr(ord(key) + 1)
+                        nbcase = 0
+
+                        # cherche une case allié a droite sans case verte intermédiaire
+                        while(searchColor(nx, k) != player and searchColor(nx, k) != "green" and ord(nx) < ord("H")):
+                            nx = chr(ord(nx) + 1)
+                            nbcase += 1
+
+                            # repère si la case est allié
+                            if searchColor(nx, k) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+                                
+
+                #GAUCHE
+                if key != 'A': 
+                    left = searchColor(chr(ord(key) - 1), k) 
+                    if(left != player and left != "green"):
+                        nx = chr(ord(key) - 1)
+                        nbcase = 0
+                        while(searchColor(nx, k) != player and searchColor(nx, k) != "green" and ord(nx) > ord("A")):
+                            nx = chr(ord(nx) - 1)
+                            nbcase += 1
+                            if searchColor(nx, k) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase                                                           
+
+
+                #TOP
+                if k != 1: 
+                    top = searchColor(key, k - 1) 
+                    if(top != player and top != "green"):
+                        ny = k - 1
+                        nbcase = 0
+                        while(searchColor(key, ny) != player and searchColor(key, ny) != "green" and ny > 1):
+                            ny -= 1
+                            nbcase += 1
+                            if searchColor(key, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+
+                #BOT
+                if k != 8: 
+                    bot = searchColor(key, k + 1) 
+                    if(bot != player and bot != "green"):
+                        ny = k + 1
+                        nbcase = 0
+                        while(searchColor(key, ny) != player and searchColor(key, ny) != "green" and ny < 8):
+                            ny += 1
+                            nbcase += 1
+                            if searchColor(key, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+
+                ### COUP DIAGONALE ###
+
+                # BAS DROITE
+                if key != "H" and k != 8:
+                    # couleur de la case en bas a droite de celle cliqué
+                    botRight = searchColor(chr(ord(key) + 1), k + 1) 
+
+                    # si case en bas a droite est un pion ennemi 
+                    if(botRight != player and botRight != "green"):
+                        nx = chr(ord(key) + 1)
+                        ny = k + 1
+                        nbcase = 0
+
+
+                        # cherche une case allié en diagonale (bas, droite) sans case verte intermédiaire et sans sortir d plateau
+                        while(searchColor(nx, ny) != player and searchColor(nx, ny) != "green" and ord(nx) < ord("H") and ny < 8):
+                            nx = chr(ord(nx) + 1)
+                            ny += 1
+                            nbcase += 1
+
+                            # repère si la case est allié
+                            if searchColor(nx, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+                
+                # BAS GAUACHE
+                if key != "A" and k != 8:
+                    botLeft = searchColor(chr(ord(key) - 1), k + 1) 
+                    if(botLeft != player and botLeft != "green"):
+                        nx = chr(ord(key) - 1)
+                        ny = k + 1
+                        nbcase = 0
+                        while(searchColor(nx, ny) != player and searchColor(nx, ny) != "green" and ord(nx) > ord("A") and ny < 8):
+                            nx = chr(ord(nx) - 1)
+                            ny += 1
+                            nbcase += 1
+                            if searchColor(nx, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+
+                # HAUT GAUCHE
+                if key != "A" and k != 1:
+                    topLeft = searchColor(chr(ord(key) - 1), k - 1) 
+                    if(topLeft != player and topLeft != "green"):
+                        nx = chr(ord(key) - 1)
+                        ny = k - 1
+                        nbcase = 0
+                        while(searchColor(nx, ny) != player and searchColor(nx, ny) != "green" and ord(nx) > ord("A") and ny > 1):
+                            nx = chr(ord(nx) - 1)
+                            ny -= 1
+                            nbcase += 1
+                            if searchColor(nx, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase
+                                
+
+                # HAUT DROIT
+                if key != "H" and k != 1:
+                    topRight = searchColor(chr(ord(key) + 1), k - 1) 
+                    if(topRight != player and topRight != "green"):
+                        nx = chr(ord(key) + 1)
+                        ny = k - 1
+                        nbcase = 0
+                        while(searchColor(nx, ny) != player and searchColor(nx, ny) != "green" and ord(nx) < ord("H") and ny > 1):
+                            nx = chr(ord(nx) + 1)
+                            ny -= 1
+                            nbcase += 1
+                            if searchColor(nx, ny) == player:
+                                playable = TRUE
+                                case = key + str(k)
+                                if case in shot:
+                                    shot[case] += nbcase
+                                else:
+                                    shot[case] = nbcase            
+                            
+                            
+            k += 1
+
+
+    # si aucun coup possible change de joueur
+    if(playable == FALSE):
+            switchPlayer()
+
+    return shot
+
+
+def checkMove(square, actor):
+    shot = checkPlayable()
+    print("case pour" , player , "=" , shot)
     valid = FALSE
-    print("ChekMove()")
     # vérifie si case pointé est libre
     if(board[square[0]][square[1]]["value"] == "green"):
-        print("CASE PAS VIDE")
 
         ### COUP LIGNE ###
 
-        #DROITE
         #ne vérifie pas si case collé au bord droit
         if(ord(square[0]) < ord("H")):
-            print("droit")
             # couleur de la case de droite
             right = searchColor(chr(ord(square[0]) + 1), square[1]) 
 
@@ -178,17 +406,15 @@ def checkMove(square):
                     if searchColor(nx, square[1]) == player:
                         nnx = chr(ord(square[0]) + 1)
                         valid = TRUE
-                        print("ok pour droit")
+
 
                         # change la couleur de la case de départ jusqu'a la case allié
                         while searchColor(nnx, square[1]) != player:
                             board[nnx][square[1]]["value"] = player
-                            print(board[nnx][square[1]])
                             nnx = chr(ord(nnx) + 1)
             
         #GAUCHE
         if(ord(square[0]) > ord("A")):
-            print("gauche")
             left = searchColor(chr(ord(square[0]) - 1), square[1]) 
             if(left != player and left != "green"):
                 nx = chr(ord(square[0]) - 1)
@@ -197,16 +423,13 @@ def checkMove(square):
                     if searchColor(nx, square[1]) == player:
                         nnx = chr(ord(square[0]) - 1)
                         valid = TRUE
-                        print("ok pour gauche")
 
                         while searchColor(nnx, square[1]) != player:
                             board[nnx][square[1]]["value"] = player
-                            print(board[nnx][square[1]])
                             nnx = chr(ord(nnx) - 1)
 
         #HAUT
         if(square[1] > 1):
-            print("haut")
             top = searchColor(square[0], square[1] - 1) 
             if(top != player and top != "green"):
                 ny = square[1] - 1
@@ -215,15 +438,12 @@ def checkMove(square):
                     if searchColor(square[0], ny) == player:
                         nny = square[1]  - 1
                         valid = TRUE
-                        print("ok pour haut")
                         while searchColor(square[0], nny) != player:
                             board[square[0]][nny]["value"] = player
-                            print(board[square[0]][nny])
                             nny -= 1
 
         #BAS
         if(square[1] < 8):
-            print("bas")
             bot = searchColor(square[0], square[1] + 1) 
             if(bot != player and bot != "green"):
                 ny = square[1] + 1
@@ -232,18 +452,15 @@ def checkMove(square):
                     if searchColor(square[0], ny) == player:
                         nny = square[1] + 1
                         valid = TRUE
-                        print("ok pour bas")
 
                         while searchColor(square[0], nny) != player:
                             board[square[0]][nny]["value"] = player
-                            print(board[square[0]][nny])
                             nny += 1
 
         ### COUP DIAGONALE ###
 
         # BAS DROITE
         if(ord(square[0]) < ord("H") and square[1] < 8):
-            print("bas droit")
             # couleur de la case en bas a droite de celle cliqué
             botRight = searchColor(chr(ord(square[0]) + 1), square[1] + 1) 
 
@@ -262,18 +479,15 @@ def checkMove(square):
                         nnx = chr(ord(square[0]) + 1)
                         nny = square[1] + 1
                         valid = TRUE
-                        print("ok pour bas droit")
 
                         # change la couleur de la case de départ jusqu'a la case allié
                         while searchColor(nnx, nny) != player:
                             board[nnx][nny]["value"] = player
-                            print(board[nnx][nny])
                             nnx = chr(ord(nnx) + 1)
                             nny += 1
 
         # BAS GAUCHE
         if(ord(square[0]) > ord("A") and square[1] < 8):
-            print("bas gauche")
             botLeft = searchColor(chr(ord(square[0]) - 1), square[1] + 1) 
             if(botLeft != player and botLeft != "green"):
                 nx = chr(ord(square[0]) - 1)
@@ -285,17 +499,14 @@ def checkMove(square):
                         nnx = chr(ord(square[0]) - 1)
                         nny = square[1] + 1
                         valid = TRUE
-                        print("ok pour bas gauche")
                         while searchColor(nnx, nny) != player:
                             board[nnx][nny]["value"] = player
-                            print(board[nnx][nny])
                             nnx = chr(ord(nnx) - 1)
                             nny += 1
 
             
         # HAUT GAUCHE
         if(ord(square[0]) > ord("A") and square[1] > 1):
-            print("haut gauche")
             topLeft = searchColor(chr(ord(square[0]) - 1), square[1] - 1) 
             if(topLeft != player and topLeft != "green"):
                 nx = chr(ord(square[0]) - 1)
@@ -307,16 +518,13 @@ def checkMove(square):
                         nnx = chr(ord(square[0]) - 1)
                         nny = square[1] - 1
                         valid = TRUE
-                        print("ok pour bas gauche")
                         while searchColor(nnx, nny) != player:
                             board[nnx][nny]["value"] = player
-                            print(board[nnx][nny])
                             nnx = chr(ord(nnx) - 1)
                             nny -= 1
 
         # HAUT DROITE
         if(ord(square[0]) < ord("H") and square[1] > 1):
-            print("haut gauche")
             topRight = searchColor(chr(ord(square[0]) + 1), square[1] - 1) 
             if(topRight != player and topRight != "green"):
                 nx = chr(ord(square[0]) + 1)
@@ -328,27 +536,77 @@ def checkMove(square):
                         nnx = chr(ord(square[0]) + 1)
                         nny = square[1] - 1
                         valid = TRUE
-                        print("ok pour bas gauche")
                         while searchColor(nnx, nny) != player:
                             board[nnx][nny]["value"] = player
-                            print(board[nnx][nny])
                             nnx = chr(ord(nnx) + 1)
                             nny -= 1
 
 
 
         if(valid):
-            print("ON VALIDE")
             board[square[0]][square[1]]["value"] = player
             switchPlayer()
             displayGrid(can)
+            checkEnd()
+            if(actor == "player"):
+                bestMove()
+            
 
+            checkPlayable()
     
 # event tkinter qui récupère le click de la souris dans la fenêtre
 def onClick(event):
     square = searchIndex(event.x, event.y)
-    checkMove(square)
-    searchColor(square[0], square[1])
+    checkMove(square, "player")
+    #searchColor(square[0], square[1])
+
+
+# retourne la clef du dictionnaire en fonction de son index
+def getKey(dictionary, n):
+    if n < 0:
+        n += len(dictionary)
+    for i, key in enumerate(dictionary.keys()):
+        if i == n:
+            return key
+    raise IndexError("dictionary index out of range") 
+
+### HEURISTIQUE ###
+
+# random 
+def randomIA():
+    shot = checkPlayable()
+    print("case pour" , player , "=" , shot)
+    shotLen = len(shot)
+    if(shotLen >= 0):
+        rand = randint(0, shotLen - 1)
+        key = getKey(shot, rand)
+        x = key[0]
+        y = int(key[1])
+        square = (x, y)
+        print("je vais jouer en", key)
+        checkMove(square, "computer")
+
+
+# meilleur coup 
+def bestMove():
+    shot = checkPlayable()
+    key = max(shot, key=shot.get)
+    x = key[0]
+    y = int(key[1])
+    square = (x, y)
+    print("je vais jouer en", key)
+    checkMove(square, "computer")
+
+
+# meilleur coup en fonction du meilleur coup adverse
+def bestMoveUp():
+    shot = checkPlayable()
+    key = max(shot, key=shot.get)
+    x = key[0]
+    y = int(key[1])
+    square = (x, y)
+    print("je vais jouer en", key)
+    checkMove(square, "computer")
 
 
 ### LANCEMENT ###
@@ -356,10 +614,11 @@ def onClick(event):
 def othello():
     initVariable()
     createWindow()
+    
 
 othello()
-
-
+# initVariable()
+# checkPlayable()
 
 
 
