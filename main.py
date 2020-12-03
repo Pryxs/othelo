@@ -153,7 +153,7 @@ def switchPlayer():
         player = "black"
 
 
-# renvoie la case en fonction des coordonnées 
+# renvoie la case en fonction des coordonnées (detecte la case pointé par un joueur humain sur l'interface) 
 def searchIndex(x, y):
     for key, value in board.items():
         k = 1
@@ -203,7 +203,7 @@ def checkEnd():
     #     displayGrid(can)
 
 
-# regarde les coups possible selon un tableau de jeu et un joueur hypothetique
+# regarde les coups possible selon un tableau de jeu et un joueur (hypothetique : ici on ne modifie rien, on envisage)
 def checkPlayable(middleBoard, middlePlayer):
     playable = FALSE
     shot = {}
@@ -573,7 +573,7 @@ def checkMove(square, hypBoard):
 
     
 
-# concretise le coup et prend en paramètre un tableau de jeu ainsi qu'un acteuer (joueur)
+# concretise le coup et prend en paramètre un tableau de jeu ainsi qu'un acteur (joueur)
 def activeBoard(middleBoard, actor):
 
     # modifie le tableau de jeu
@@ -602,7 +602,7 @@ def activeBoard(middleBoard, actor):
 def onClick(event):
     # human(event.x, event.y)
     # vs()
-    stats(100)
+    stats(10)
 
 # retourne la clef du dictionnaire en fonction de son index
 def getKey(dictionary, n):
@@ -828,13 +828,13 @@ def bme(shot, initialShot, brd, currentValue, tab, kk):
         finalTab = tab
 
 
-# fonction recursive qui génère le tableau des coups sur une profondeur de 3 (ici : peu etre modifié)
-def bm(shot, initialShot, brd, currentValue, tab, kk):
+# fonction recursive qui génère le tableau des coups sur une profondeur depth (ici : peu etre modifié)
+def bm(shot, initialShot, brd, tab, kk, nkk, depth):
     global finalTab
     currentScore = score["white"] + score["black"]
     hypScore = getScore(brd)
     # condition de sortie en fonction de la profondeur
-    if(hypScore - currentScore <= 3 and shot):
+    if(hypScore - currentScore <= depth and shot):
         for key, value in list(shot.items()): # list pour éviter problèmes lié a l'index du dict quand il change en cours
             square = (key[0], int(key[1])) # 1 coup possible 
             middleBoard = checkMove(square, brd) # tableau rendu si je joue ce coup 
@@ -845,6 +845,10 @@ def bm(shot, initialShot, brd, currentValue, tab, kk):
             else:
                 middleShot = checkPlayable(middleBoard, "white")
 
+
+            # if(nkk):
+            #     nkk = nkk[:-2]
+
             if(middleShot):
                 # calcul la valeur du coup 
                 maxMiddleValueKey = max(middleShot, key=middleShot.get)
@@ -852,25 +856,38 @@ def bm(shot, initialShot, brd, currentValue, tab, kk):
                 shotValue = value - maxMiddleValue 
                 # initialise kk (1 etape du chemin) si elle existe pas
                 if(not kk):
+                    # print("init kk")
                     kk = (key + maxMiddleValueKey)
                     tab[kk] = shotValue
 
                 # quand explore une autre branche de l'arbre change etape du chemin
                 elif(initialShot == shot):
+                    # print("nouvelle branche")
                     if(key != kk[:2]):
                         kk = (key + maxMiddleValueKey)
                         tab[kk] = shotValue
                         
                 # sinon enregistre la valeur actuel et affecte valeur suivante de larbre
                 else:
-                    precValue = tab[kk]
-                    newValue = precValue + shotValue
-                    nkk = kk + (key + maxMiddleValueKey)
-                    tab[nkk] = newValue
+                    # print("normal")
+                    if(nkk):
+                        precValue = tab[nkk]
+                        newValue = precValue + shotValue
+                        if(len(nkk) == depth * 2 + 2):
+                            nkk = nkk[:-4]
+                        nkk = nkk + (key + maxMiddleValueKey)
+                        tab[nkk] = newValue                   
+                    else:
+                        precValue = tab[kk]
+                        newValue = precValue + shotValue
+                        nkk = kk + (key + maxMiddleValueKey)
+                        tab[nkk] = newValue
+                    
 
                 # print("en testant ",square,", PLAYER peut jouer en : ",middleShot)
                 middleSquare = (maxMiddleValueKey[0], int(maxMiddleValueKey[1]))
                 # print("PLAYER test : ",middleSquare)
+                # print(tab)
                 switchPlayer() # change de joueur pour génèrer un tableau de jeu hypothetique en fonction du coup ennemi
                 hypBoard = checkMove(middleSquare, middleBoard)
                 switchPlayer() # change de joueur pour regarder ou le coup allié peut être placé 
@@ -881,7 +898,7 @@ def bm(shot, initialShot, brd, currentValue, tab, kk):
                 else:
                     hypShot = checkPlayable(hypBoard, "black")
 
-                bm(hypShot, initialShot, hypBoard, currentValue, tab, kk)  
+                bm(hypShot, initialShot, hypBoard, tab, kk, nkk, depth)  
 
             # condition qand adversaire ne peu plus jouer
             else:
@@ -901,7 +918,7 @@ def bestMoveInf():
     if(shot):
         initialShot = copy.deepcopy(shot)
         tab = {}
-        bm(shot, initialShot, board, None, tab, None)
+        bm(shot, initialShot, board, tab, None, None, 7)
 
         maxKey = max(len(x) for x in finalTab) # longueur des clefs finales
 
