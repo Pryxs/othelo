@@ -585,10 +585,10 @@ def activeBoard(middleBoard, actor):
 
     # pour versus humain/machine on donne le jeu a l'ordinateur
     if(actor == "player"):
-        randomIA()
+        # randomIA()
         bestMove(True)
-        bestMoveUp(True)
-        bestMoveInf(3)
+        # bestMoveUp(True)
+        # bestMoveInf(3)
 
 
 # event tkinter qui récupère le click de la souris dans la fenêtre
